@@ -1,0 +1,46 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: adeti
+      POSTGRES_PASSWORD: adeti
+      POSTGRES_DB: adeti
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U adeti"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  web:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgresql://adeti:adeti@db:5432/adeti?schema=public
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
+      AUTH_SECRET: ${AUTH_SECRET:-change-me-to-a-long-random-string-of-at-least-32-chars}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@a-deti.ru}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin12345}
+      NEXT_PUBLIC_YANDEX_METRIKA_ID: ${NEXT_PUBLIC_YANDEX_METRIKA_ID:-}
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-465}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-site@a-deti.ru}
+      LEADS_EMAIL: ${LEADS_EMAIL:-zakaz@a-deti.ru}
+      PAYMENT_GATEWAY_URL: ${PAYMENT_GATEWAY_URL:-}
+    volumes:
+      - uploads:/app/public/uploads/cms
+    ports:
+      - "3000:3000"
+
+volumes:
+  pgdata:
+  uploads:

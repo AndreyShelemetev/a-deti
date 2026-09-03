@@ -1,0 +1,191 @@
+@import "tailwindcss";
+@import "@fontsource-variable/nunito";
+
+@theme {
+  --font-sans: "Nunito Variable", "Segoe UI", system-ui, -apple-system, sans-serif;
+
+  /* Brand palette — bright, warm, friendly */
+  --color-brand-50: #eef3ff;
+  --color-brand-100: #dbe5ff;
+  --color-brand-200: #bccdff;
+  --color-brand-300: #8facff;
+  --color-brand-400: #5b80ff;
+  --color-brand-500: #3559ff;
+  --color-brand-600: #1f3ff0;
+  --color-brand-700: #1a31c7;
+  --color-brand-800: #1a2c9e;
+  --color-brand-900: #1b2a7a;
+
+  --color-sun-50: #fffbe6;
+  --color-sun-100: #fff4b8;
+  --color-sun-200: #ffe97a;
+  --color-sun-300: #ffd93d;
+  --color-sun-400: #ffc812;
+  --color-sun-500: #f5b400;
+  --color-sun-600: #cc8f00;
+
+  --color-coral-50: #fff2ec;
+  --color-coral-100: #ffe1d1;
+  --color-coral-200: #ffc2a3;
+  --color-coral-300: #ff9b6a;
+  --color-coral-400: #ff7a3d;
+  --color-coral-500: #f95a04;
+  --color-coral-600: #d84800;
+  --color-coral-700: #b03a00;
+
+  --color-mint-50: #edfdf3;
+  --color-mint-100: #d3fae1;
+  --color-mint-200: #a9f3c6;
+  --color-mint-300: #6fe6a2;
+  --color-mint-400: #33d17a;
+  --color-mint-500: #16b862;
+  --color-mint-600: #0e944e;
+  --color-mint-700: #0f7540;
+
+  --color-berry-50: #fff0f7;
+  --color-berry-100: #ffe0ef;
+  --color-berry-200: #ffc2df;
+  --color-berry-300: #ff93c4;
+  --color-berry-400: #ff5ea5;
+  --color-berry-500: #f0338a;
+  --color-berry-600: #d11a6f;
+
+  --color-ink-900: #14163a;
+  --color-ink-800: #1f2352;
+  --color-ink-700: #33386b;
+  --color-ink-600: #4a4f7d;
+  --color-ink-500: #6a6f97;
+  --color-ink-400: #8f93b3;
+  --color-ink-300: #b8bbd1;
+  --color-ink-200: #dcdeea;
+  --color-ink-100: #eef0f6;
+  --color-ink-50: #f6f7fb;
+
+  --color-cream: #fffdf8;
+  --color-sand: #fbf7ef;
+
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+  --radius-3xl: 1.75rem;
+  --radius-4xl: 2.25rem;
+
+  --shadow-soft: 0 10px 30px -12px rgb(20 22 58 / 0.18);
+  --shadow-card: 0 4px 16px -6px rgb(20 22 58 / 0.12), 0 1px 3px rgb(20 22 58 / 0.06);
+  --shadow-pop: 0 20px 45px -15px rgb(53 89 255 / 0.35);
+
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-pop: pop 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.4);
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  @keyframes pop {
+    0% { transform: scale(0.96); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-cream text-ink-800 antialiased;
+    font-feature-settings: "ss01", "cv11";
+  }
+  ::selection {
+    @apply bg-sun-200 text-ink-900;
+  }
+  h1, h2, h3, h4 {
+    @apply font-extrabold tracking-tight text-ink-900;
+    text-wrap: balance;
+  }
+  :focus-visible {
+    @apply outline-none ring-4 ring-brand-300/60 rounded-lg;
+  }
+}
+
+@utility container-site {
+  @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+}
+@utility section-title {
+  @apply text-2xl sm:text-3xl lg:text-4xl font-extrabold text-ink-900;
+}
+@utility card {
+  @apply rounded-3xl bg-white shadow-card;
+}
+@utility chip {
+  @apply inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold leading-5;
+}
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-extrabold transition-all duration-200 active:scale-[0.98] disabled:opacity-60 disabled:pointer-events-none;
+}
+@utility btn-primary {
+  @apply btn bg-brand-500 text-white shadow-pop hover:bg-brand-600 hover:-translate-y-0.5;
+}
+@utility btn-accent {
+  @apply btn bg-coral-500 text-white hover:bg-coral-600 hover:-translate-y-0.5;
+}
+@utility btn-sun {
+  @apply btn bg-sun-300 text-ink-900 hover:bg-sun-400 hover:-translate-y-0.5;
+}
+@utility btn-outline {
+  @apply btn border-2 border-brand-200 bg-white text-brand-700 hover:border-brand-400 hover:bg-brand-50;
+}
+@utility btn-ghost {
+  @apply btn text-brand-700 hover:bg-brand-50;
+}
+@utility input {
+  @apply w-full rounded-2xl border-2 border-ink-200 bg-white px-4 py-3 text-base text-ink-900 placeholder:text-ink-400 transition-colors focus:border-brand-400 focus:outline-none focus:ring-4 focus:ring-brand-100 disabled:bg-ink-50;
+}
+@utility label {
+  @apply mb-1.5 block text-sm font-bold text-ink-700;
+}
+@utility blob {
+  @apply pointer-events-none absolute rounded-full blur-3xl;
+}
+.section-title .accent {
+  @apply text-brand-500;
+}
+
+/* Rich text from the CMS (tour descriptions, news, pages) */
+.rich {
+  @apply text-[1.02rem] leading-relaxed text-ink-800;
+}
+.rich > * + * { margin-top: 1rem; }
+.rich h2 { @apply mt-8 text-2xl font-extrabold text-ink-900; }
+.rich h3 { @apply mt-6 text-xl font-extrabold text-ink-900; }
+.rich h4, .rich h5 { @apply mt-4 text-lg font-bold text-ink-900; }
+.rich p { margin-top: 0.85rem; }
+.rich ul, .rich ol { @apply my-3 space-y-1.5 pl-6; }
+.rich ul { list-style: none; }
+.rich ul > li { position: relative; }
+.rich ul > li::before {
+  content: "";
+  @apply absolute -left-5 top-[0.7em] h-2.5 w-2.5 rounded-full bg-sun-400;
+}
+.rich ol { list-style: decimal; }
+.rich ol > li::marker { @apply font-extrabold text-brand-500; }
+.rich a { @apply font-bold text-brand-600 underline decoration-brand-200 underline-offset-4 hover:decoration-brand-500; }
+.rich strong { @apply font-extrabold text-ink-900; }
+.rich img { @apply my-4 h-auto max-w-full rounded-2xl; }
+.rich blockquote { @apply my-4 rounded-2xl border-l-4 border-sun-400 bg-sun-50 px-5 py-3 italic; }
+.rich hr { @apply my-6 border-ink-200; }
+.rich table { @apply my-4 block w-full overflow-x-auto text-sm; border-collapse: collapse; }
+.rich table thead, .rich table tbody { display: table; width: 100%; }
+.rich th { @apply bg-brand-50 px-3 py-2 text-left font-extrabold text-ink-900; }
+.rich td { @apply border-t border-ink-100 px-3 py-2 align-top; }
+.rich tr:nth-child(even) td { @apply bg-ink-50/60; }
+.rich sup { font-size: 0.7em; }
+
+/* Scrollbar-free horizontal scrollers */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Soft dotted background used in hero */
+.bg-dots {
+  background-image: radial-gradient(rgb(53 89 255 / 0.12) 1.2px, transparent 1.2px);
+  background-size: 22px 22px;
+}
