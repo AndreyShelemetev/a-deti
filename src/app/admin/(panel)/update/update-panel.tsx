@@ -18,6 +18,7 @@ export function UpdatePanel({ initialStatus, initialError, defaultRef, buildComm
   const [error, setError] = useState<string | null>(initialError);
   const [checking, setChecking] = useState(false);
   const [reconnecting, setReconnecting] = useState(false);
+  const [watched, setWatched] = useState(false);
   const [pending, start] = useTransition();
   const logRef = useRef<HTMLPreElement>(null);
   const jobId = job?.status === "running" ? job.id : null;
@@ -38,7 +39,13 @@ export function UpdatePanel({ initialStatus, initialError, defaultRef, buildComm
         failures = 0;
         setReconnecting(false);
         setJob(data);
-        if (data.status !== "running") { router.refresh(); return; }
+        if (data.status !== "running") {
+          // the site was just rebuilt: Next.js will force a full reload on the next navigation anyway,
+          // so give the user a moment to read the log, then reload to the new version
+          setWatched(true);
+          setTimeout(() => window.location.reload(), 8000);
+          return;
+        }
       } catch (e) {
         failures += 1;
         setReconnecting(true);
@@ -49,6 +56,18 @@ export function UpdatePanel({ initialStatus, initialError, defaultRef, buildComm
     void tick();
     return () => { stopped = true; };
   }, [jobId, runningDeployment?.jobId, router]);
+
+  // show the log of the last deploy when the page opens without a running job
+  const lastId = !jobId && !runningDeployment?.jobId ? initialStatus?.last?.id ?? null : null;
+  useEffect(() => {
+    if (!lastId) return;
+    let cancelled = false;
+    fetch(`/api/admin/update/?action=job&id=${lastId}`, { cache: "no-store" })
+      .then((r) => r.json())
+      .then((data: UpdaterJob & { error?: string }) => { if (!cancelled && !data.error) setJob(data); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [lastId]);
 
   useEffect(() => { logRef.current?.scrollTo({ top: logRef.current.scrollHeight }); }, [job?.log]);
 
@@ -124,7 +143,13 @@ export function UpdatePanel({ initialStatus, initialError, defaultRef, buildComm
           {reconnecting ? <span className="text-xs font-bold text-sun-600">сайт перезапускается, ждём ответа…</span> : null}
           {job?.status === "running" ? <Loader2 className="h-4 w-4 animate-spin text-brand-500" /> : job?.status === "success" ? <CheckCircle2 className="h-5 w-5 text-mint-500" /> : job?.status === "failed" ? <XCircle className="h-5 w-5 text-coral-500" /> : null}
         </h2>
-        <pre ref={logRef} className="h-[28rem] overflow-auto rounded-xl bg-ink-900 p-4 font-mono text-xs leading-relaxed text-ink-100">{job?.log || (job ? "Ожидание вывода…" : status?.last ? `Последнее обновление: ${status.last.ref} · ${status.last.status} · ${status.last.finishedAt ?? ""}` : "Здесь появится вывод сборки.")}</pre>
+        {watched && job && job.status !== "running" ? (
+          <div className={`mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl px-4 py-2.5 text-sm font-bold ${job.status === "success" ? "bg-mint-100 text-mint-700" : "bg-coral-100 text-coral-700"}`}>
+            <span>{job.status === "success" ? "Обновление завершено успешно. Страница перезагрузится через несколько секунд." : "Обновление завершилось с ошибкой. Смотрите журнал ниже."}</span>
+            <button type="button" onClick={() => window.location.reload()} className="btn-outline !py-1.5 !text-xs">Перезагрузить сейчас</button>
+          </div>
+        ) : null}
+        <pre ref={logRef} className="h-[28rem] overflow-auto rounded-xl bg-ink-900 p-4 font-mono text-xs leading-relaxed text-ink-100">{job?.log || (job ? "Ожидание вывода…" : "Здесь появится вывод сборки.")}</pre>
       </section>
     </div>
   );

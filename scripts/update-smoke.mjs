@@ -17,8 +17,8 @@ console.log("check:", await page.locator("text=/Установлена посл�
 await page.click('button:has-text("Обновить до")');
 await page.waitForSelector("text=Обновление выполняется", { timeout: 30000 });
 console.log("deploy started");
-await page.waitForSelector("text=/Deploy finished|Unknown DEPLOY_MODE|rror/", { timeout: 600000 });
-await page.waitForTimeout(4000);
+await page.waitForSelector("text=/Обновление завершено/", { timeout: 600000 });
+await page.waitForTimeout(500);
 await page.screenshot({ path: `${out}/admin_update.png` });
 const log = await page.locator("pre").innerText();
 console.log("log tail:", log.split("\n").slice(-3).join(" | "));
