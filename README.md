@@ -64,6 +64,7 @@ docker compose exec web ./node_modules/.bin/prisma db seed   # первично�
 | Команда | Описание |
 |---------|----------|
 | `pnpm dev` / `pnpm build` / `pnpm start` | разработка / сборка / запуск |
+| `./deploy.sh <ветка>` | обновить сервер вручную (то же, что кнопка в админке) |
 | `pnpm lint`, `pnpm typecheck`, `pnpm test` | ESLint, TypeScript, Vitest |
 | `pnpm db:migrate` | создать/применить миграцию (dev) |
 | `pnpm db:deploy` | применить миграции (prod) |
@@ -117,22 +118,28 @@ scripts/                 — конвертация изображений, ск
 - Фотографии: перенесено по обложке + до 8 фото на тур (всего 464 файла, WebP). Остальные фото галерей можно догрузить через админку или повторным импортом (`scripts/convert-images.mjs`).
 - Кабинет агентств (на старом сайте — только форма входа): заявки агентств уже собираются, авторизация агентств — следующий шаг.
 
+## Установка на сервер (без Docker)
+
+Нужен сервер с Ubuntu 22.04/24.04 и доступом по SSH. Скрипт ставит Node.js 22, pnpm, pm2, PostgreSQL, nginx, клонирует репозиторий, создаёт базу, собирает сайт и запускает его вместе с сервисом обновления под pm2:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/AndreyShelemetev/a-deti/main/deploy/install.sh -o install.sh
+bash install.sh /srv/a-deti main        # каталог и ветка
+nano /srv/a-deti/.env                   # NEXT_PUBLIC_SITE_URL, ADMIN_EMAIL, ADMIN_PASSWORD, SMTP…
+cd /srv/a-deti && pm2 restart all
+```
+
+Затем подключите nginx по образцу `deploy/nginx.conf.example` и выпустите сертификат (`certbot --nginx`). Сайт слушает `127.0.0.1:3000`, сервис обновления — `127.0.0.1:4100` (наружу не открывать).
+
+Ручной запуск тех же шагов: `pnpm install`, `pnpm exec prisma migrate deploy`, `pnpm exec prisma db seed`, `pnpm exec next build`, `pm2 start ecosystem.config.cjs && pm2 save`.
+
 ## Обновление сайта из админки
 
 Раздел `/admin/update/` (только для администраторов) показывает текущую версию, проверяет наличие новых коммитов в выбранной ветке или теге и по кнопке «Обновить» пересобирает и перезапускает сайт. Журнал сборки виден в реальном времени, история обновлений хранится в таблице `Deployment`. Откат: указать предыдущий тег или коммит и нажать «Обновить».
 
-Как это устроено: рядом с сайтом работает сервис `updater` (`updater/server.mjs`, в docker-compose поднимается автоматически). Он запускает `deploy.sh <ref>`: `git fetch` → `git checkout` → `docker compose build web` → `docker compose up -d web`. Миграции применяются при старте контейнера. Настройки: `UPDATER_URL`, `UPDATER_TOKEN`, `UPDATER_DEFAULT_REF`, `REPO_DIR` (путь к репозиторию на сервере, монтируется в контейнер `updater` по тому же пути). Порт сервиса наружу не публикуется. Без Docker используйте `DEPLOY_MODE=pm2` (см. `updater/README.md`).
+Как это устроено: под pm2 рядом с сайтом работает сервис `updater` (`updater/server.mjs`). Он запускает `deploy.sh <ref>`: `git fetch` → `git checkout` → `pnpm install` → `prisma migrate deploy` → `next build` → `pm2 reload`. База и загруженные файлы сохраняются, сайт недоступен несколько секунд во время перезапуска. Если в обновлении менялся сам сервис (`updater/`), в журнале появится подсказка выполнить `pm2 restart a-deti-updater`.
 
-Первичная установка на сервере:
-
-```bash
-git clone https://github.com/AndreyShelemetev/a-deti.git /srv/a-deti && cd /srv/a-deti
-cp .env.example .env            # заполнить AUTH_SECRET, UPDATER_TOKEN, NEXT_PUBLIC_SITE_URL, пароль админа
-docker compose up -d --build    # postgres + web + updater
-docker compose exec web ./node_modules/.bin/prisma db seed
-```
-
-Дальше новые версии загружаются кнопкой в админке.
+Настройки в `.env`: `UPDATER_URL` (`http://127.0.0.1:4100`), `UPDATER_TOKEN`, `UPDATER_DEFAULT_REF` (ветка по умолчанию), `REPO_DIR`. Вариант с Docker (`docker compose up -d --build`, режим `DEPLOY_MODE=docker`) тоже поддерживается, см. `updater/README.md`.
 
 ## Переменные окружения
 
