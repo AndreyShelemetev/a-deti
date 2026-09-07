@@ -17,25 +17,34 @@ export function UpdatePanel({ initialStatus, initialError, defaultRef, buildComm
   const [job, setJob] = useState<UpdaterJob | null>(initialStatus?.running ?? null);
   const [error, setError] = useState<string | null>(initialError);
   const [checking, setChecking] = useState(false);
+  const [reconnecting, setReconnecting] = useState(false);
   const [pending, start] = useTransition();
   const logRef = useRef<HTMLPreElement>(null);
   const jobId = job?.status === "running" ? job.id : null;
 
-  // poll a running job
+  // poll a running job; the site restarts at the end of a deploy, so transient fetch errors are retried
   useEffect(() => {
     const id = jobId ?? (runningDeployment?.jobId ?? null);
     if (!id) return;
     let stopped = false;
+    let failures = 0;
     const tick = async () => {
+      if (stopped) return;
       try {
         const res = await fetch(`/api/admin/update/?action=job&id=${id}`, { cache: "no-store" });
         const data = (await res.json()) as UpdaterJob & { error?: string };
         if (stopped) return;
-        if (data.error) { setError(data.error); return; }
+        if (data.error) throw new Error(data.error);
+        failures = 0;
+        setReconnecting(false);
         setJob(data);
         if (data.status !== "running") { router.refresh(); return; }
-        setTimeout(tick, 2500);
-      } catch (e) { if (!stopped) setError(e instanceof Error ? e.message : "Ошибка связи"); }
+      } catch (e) {
+        failures += 1;
+        setReconnecting(true);
+        if (failures > 60) { setError(e instanceof Error ? e.message : "Ошибка связи"); return; }
+      }
+      setTimeout(tick, 2500);
     };
     void tick();
     return () => { stopped = true; };
@@ -112,6 +121,7 @@ export function UpdatePanel({ initialStatus, initialError, defaultRef, buildComm
       <section className="rounded-2xl bg-white p-5 shadow-card xl:col-span-7">
         <h2 className="mb-3 flex items-center gap-2 text-lg font-extrabold">
           Журнал {job ? <span className="text-sm font-bold text-ink-500">· {job.ref} · #{job.id}</span> : null}
+          {reconnecting ? <span className="text-xs font-bold text-sun-600">сайт перезапускается, ждём ответа…</span> : null}
           {job?.status === "running" ? <Loader2 className="h-4 w-4 animate-spin text-brand-500" /> : job?.status === "success" ? <CheckCircle2 className="h-5 w-5 text-mint-500" /> : job?.status === "failed" ? <XCircle className="h-5 w-5 text-coral-500" /> : null}
         </h2>
         <pre ref={logRef} className="h-[28rem] overflow-auto rounded-xl bg-ink-900 p-4 font-mono text-xs leading-relaxed text-ink-100">{job?.log || (job ? "Ожидание вывода…" : status?.last ? `Последнее обновление: ${status.last.ref} · ${status.last.status} · ${status.last.finishedAt ?? ""}` : "Здесь появится вывод сборки.")}</pre>
