@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BookOpen, CreditCard, FileText, Globe, Home, Inbox, LayoutDashboard, LogOut, Map, MessageSquare, Newspaper, Settings, Tags, Tent, Users, Mail } from "lucide-react";
+import { BookOpen, CreditCard, FileText, Globe, Home, Inbox, LayoutDashboard, LogOut, Map, MessageSquare, Newspaper, Rocket, Settings, Tags, Tent, Users, Mail } from "lucide-react";
 import { requireSession } from "@/lib/auth";
 import { logout } from "@/server/actions/auth";
 import { prisma } from "@/lib/prisma";
@@ -22,6 +22,7 @@ const NAV = [
   { href: "/admin/subscribers/", label: "Подписчики", icon: Mail },
   { href: "/admin/settings/", label: "Настройки сайта", icon: Settings },
   { href: "/admin/users/", label: "Пользователи", icon: Users },
+  { href: "/admin/update/", label: "Обновление сайта", icon: Rocket },
 ];
 
 export default async function AdminLayout({ children }: LayoutProps<"/admin">) {

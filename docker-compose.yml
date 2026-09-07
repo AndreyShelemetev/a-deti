@@ -17,7 +17,10 @@ services:
       retries: 10
 
   web:
-    build: .
+    build:
+      context: .
+      args:
+        GIT_COMMIT: ${GIT_COMMIT:-}
     restart: unless-stopped
     depends_on:
       db:
@@ -36,10 +39,28 @@ services:
       SMTP_FROM: ${SMTP_FROM:-site@a-deti.ru}
       LEADS_EMAIL: ${LEADS_EMAIL:-zakaz@a-deti.ru}
       PAYMENT_GATEWAY_URL: ${PAYMENT_GATEWAY_URL:-}
+      UPDATER_URL: http://updater:4100
+      UPDATER_TOKEN: ${UPDATER_TOKEN:-change-me-updater-token-min-16-chars}
+      UPDATER_DEFAULT_REF: ${UPDATER_DEFAULT_REF:-main}
     volumes:
       - uploads:/app/public/uploads/cms
     ports:
       - "3000:3000"
+
+  # Sidecar that updates the site from git on request from /admin/update/ (never publish its port)
+  updater:
+    build: ./updater
+    restart: unless-stopped
+    environment:
+      UPDATER_TOKEN: ${UPDATER_TOKEN:-change-me-updater-token-min-16-chars}
+      REPO_DIR: ${REPO_DIR:-/srv/a-deti}
+      DEPLOY_MODE: docker
+      COMPOSE_PROJECT_NAME: ${COMPOSE_PROJECT_NAME:-a-deti}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      # the repository must be mounted at the SAME path as on the host so `docker compose build` finds its context
+      - ${REPO_DIR:-/srv/a-deti}:${REPO_DIR:-/srv/a-deti}
+    working_dir: ${REPO_DIR:-/srv/a-deti}
 
 volumes:
   pgdata:

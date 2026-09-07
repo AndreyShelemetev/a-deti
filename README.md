@@ -71,6 +71,7 @@ docker compose exec web ./node_modules/.bin/prisma db seed   # первично�
 | `pnpm db:studio` | Prisma Studio |
 | `node scripts/screenshots.mjs` | скриншоты ключевых страниц (desktop + mobile) |
 | `node scripts/admin-smoke.mjs` | end-to-end проверка админки и форм |
+| `node scripts/update-smoke.mjs` | проверка сценария обновления из админки (нужен запущенный `updater`) |
 
 ## Структура
 
@@ -115,6 +116,23 @@ scripts/                 — конвертация изображений, ск
 - **Яндекс.Метрика**: `NEXT_PUBLIC_YANDEX_METRIKA_ID` (счётчик старого сайта — 104199506).
 - Фотографии: перенесено по обложке + до 8 фото на тур (всего 464 файла, WebP). Остальные фото галерей можно догрузить через админку или повторным импортом (`scripts/convert-images.mjs`).
 - Кабинет агентств (на старом сайте — только форма входа): заявки агентств уже собираются, авторизация агентств — следующий шаг.
+
+## Обновление сайта из админки
+
+Раздел `/admin/update/` (только для администраторов) показывает текущую версию, проверяет наличие новых коммитов в выбранной ветке или теге и по кнопке «Обновить» пересобирает и перезапускает сайт. Журнал сборки виден в реальном времени, история обновлений хранится в таблице `Deployment`. Откат: указать предыдущий тег или коммит и нажать «Обновить».
+
+Как это устроено: рядом с сайтом работает сервис `updater` (`updater/server.mjs`, в docker-compose поднимается автоматически). Он запускает `deploy.sh <ref>`: `git fetch` → `git checkout` → `docker compose build web` → `docker compose up -d web`. Миграции применяются при старте контейнера. Настройки: `UPDATER_URL`, `UPDATER_TOKEN`, `UPDATER_DEFAULT_REF`, `REPO_DIR` (путь к репозиторию на сервере, монтируется в контейнер `updater` по тому же пути). Порт сервиса наружу не публикуется. Без Docker используйте `DEPLOY_MODE=pm2` (см. `updater/README.md`).
+
+Первичная установка на сервере:
+
+```bash
+git clone https://github.com/AndreyShelemetev/a-deti.git /srv/a-deti && cd /srv/a-deti
+cp .env.example .env            # заполнить AUTH_SECRET, UPDATER_TOKEN, NEXT_PUBLIC_SITE_URL, пароль админа
+docker compose up -d --build    # postgres + web + updater
+docker compose exec web ./node_modules/.bin/prisma db seed
+```
+
+Дальше новые версии загружаются кнопкой в админке.
 
 ## Переменные окружения
 
