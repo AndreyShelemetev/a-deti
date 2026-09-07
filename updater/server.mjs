@@ -11,8 +11,13 @@
  */
 import http from "node:http";
 import { spawn } from "node:child_process";
-import { mkdirSync, readFileSync, writeFileSync, appendFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync, appendFileSync, copyFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
+
+// Load the site's .env (UPDATER_TOKEN, REPO_DIR, DEPLOY_MODE…) when started outside Docker, e.g. by pm2.
+for (const candidate of [join(process.env.REPO_DIR ?? process.cwd(), ".env"), join(process.cwd(), ".env"), join(process.cwd(), "..", ".env")]) {
+  if (existsSync(candidate)) { try { process.loadEnvFile(candidate); } catch {} break; }
+}
 
 const PORT = Number(process.env.PORT ?? 4100);
 const HOST = process.env.HOST ?? "0.0.0.0";
@@ -83,7 +88,10 @@ function startDeploy(ref) {
   state.running = job;
   const append = (s) => appendFileSync(logFile, s);
   append(`[updater] deploy ${ref} started ${job.startedAt}\n`);
-  run("bash", [DEPLOY_SCRIPT, ref], { onData: append }).then(async (r) => {
+  // run a copy of the script: the checkout inside it may rewrite deploy.sh while bash is still reading it
+  const script = join(LOG_DIR, `deploy-${id}.sh`);
+  copyFileSync(DEPLOY_SCRIPT, script);
+  run("bash", [script, ref], { onData: append }).then(async (r) => {
     job.status = r.code === 0 ? "success" : "failed";
     job.exitCode = r.code;
     job.finishedAt = new Date().toISOString();

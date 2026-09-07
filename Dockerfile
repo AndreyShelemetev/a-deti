@@ -8,7 +8,7 @@ COPY prisma.config.ts ./
 RUN pnpm install --frozen-lockfile
 COPY . .
 ARG GIT_COMMIT=""
-ENV NEXT_TELEMETRY_DISABLED=1 NEXT_PUBLIC_APP_COMMIT=$GIT_COMMIT
+ENV NEXT_TELEMETRY_DISABLED=1 NEXT_OUTPUT=standalone NEXT_PUBLIC_APP_COMMIT=$GIT_COMMIT
 RUN pnpm prisma generate && pnpm exec next build
 
 # ---- runtime ----

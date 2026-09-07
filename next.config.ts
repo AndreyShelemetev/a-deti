@@ -4,7 +4,8 @@ const nextConfig: NextConfig = {
   // Preserve the original site's URL scheme (all paths end with a slash) — important for SEO migration.
   trailingSlash: true,
   poweredByHeader: false,
-  output: "standalone",
+  // "standalone" only for the Docker image; on a plain server `next start` is used (see deploy.sh)
+  output: process.env.NEXT_OUTPUT === "standalone" ? "standalone" : undefined,
   serverExternalPackages: ["bcryptjs", "nodemailer"],
   images: {
     formats: ["image/avif", "image/webp"],
