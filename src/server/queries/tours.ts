@@ -27,7 +27,7 @@ export type TourListParams = {
 };
 
 export function buildTourWhere(p: TourListParams): Prisma.TourWhereInput {
-  const and: Prisma.TourWhereInput[] = [{ isPublished: true }];
+  const and: Prisma.TourWhereInput[] = [{ isPublished: true, archivedAt: null }];
   if (p.type) and.push({ type: p.type });
   if (p.regionSlugs?.length) and.push({ region: { slug: { in: p.regionSlugs } } });
   for (const slug of p.tagSlugs ?? []) and.push({ tags: { some: { tag: { slug } } } });
@@ -69,7 +69,7 @@ export async function listTours(params: TourListParams) {
 
 export const getTourBySlug = cache(async (slug: string) => {
   return prisma.tour.findFirst({
-    where: { slug, isPublished: true },
+    where: { slug, isPublished: true, archivedAt: null },
     include: {
       region: true,
       tags: { include: { tag: true }, orderBy: { tag: { sortOrder: "asc" } } },
@@ -86,7 +86,7 @@ export type TourFull = NonNullable<Awaited<ReturnType<typeof getTourBySlug>>>;
 
 export async function getRelatedTours(tour: { id: number; type: TourType; regionId: number | null }, take = 4) {
   return prisma.tour.findMany({
-    where: { isPublished: true, id: { not: tour.id }, OR: [{ regionId: tour.regionId ?? -1 }, { type: tour.type }] },
+    where: { isPublished: true, archivedAt: null, id: { not: tour.id }, OR: [{ regionId: tour.regionId ?? -1 }, { type: tour.type }] },
     select: tourCardSelect,
     orderBy: [{ isBest: "desc" }, { sortOrder: "asc" }],
     take,
@@ -94,7 +94,7 @@ export async function getRelatedTours(tour: { id: number; type: TourType; region
 }
 
 export async function getPublishedTourSlugs() {
-  return prisma.tour.findMany({ where: { isPublished: true }, select: { slug: true, updatedAt: true } });
+  return prisma.tour.findMany({ where: { isPublished: true, archivedAt: null }, select: { slug: true, updatedAt: true } });
 }
 
 export const getFilterFacets = cache(async () => {
@@ -107,9 +107,9 @@ export const getFilterFacets = cache(async () => {
 
 export async function getHomeTours() {
   const [bestRussia, bestAbroad, hits] = await Promise.all([
-    prisma.tour.findMany({ where: { isPublished: true, isBest: true, region: { isForeign: false } }, select: tourCardSelect, orderBy: { sortOrder: "asc" }, take: 6 }),
-    prisma.tour.findMany({ where: { isPublished: true, isBest: true, region: { isForeign: true } }, select: tourCardSelect, orderBy: { sortOrder: "asc" }, take: 6 }),
-    prisma.tour.findMany({ where: { isPublished: true, isHit: true }, select: tourCardSelect, orderBy: { sortOrder: "asc" }, take: 6 }),
+    prisma.tour.findMany({ where: { isPublished: true, archivedAt: null, isBest: true, region: { isForeign: false } }, select: tourCardSelect, orderBy: { sortOrder: "asc" }, take: 6 }),
+    prisma.tour.findMany({ where: { isPublished: true, archivedAt: null, isBest: true, region: { isForeign: true } }, select: tourCardSelect, orderBy: { sortOrder: "asc" }, take: 6 }),
+    prisma.tour.findMany({ where: { isPublished: true, archivedAt: null, isHit: true }, select: tourCardSelect, orderBy: { sortOrder: "asc" }, take: 6 }),
   ]);
   return { bestRussia, bestAbroad, hits };
 }

@@ -8,7 +8,7 @@ export async function searchSite(q: string) {
   const words = query.toLowerCase().split(/\s+/).slice(0, 6);
   const [tours, posts, pages] = await Promise.all([
     prisma.tour.findMany({
-      where: { isPublished: true, AND: words.map((w) => ({ searchText: { contains: w } })) },
+      where: { isPublished: true, archivedAt: null, AND: words.map((w) => ({ searchText: { contains: w } })) },
       select: tourCardSelect,
       orderBy: [{ isBest: "desc" }, { sortOrder: "asc" }],
       take: 30,

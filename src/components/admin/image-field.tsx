@@ -4,11 +4,13 @@ import { useState } from "react";
 import Image from "next/image";
 import { Loader2, Upload, X } from "lucide-react";
 
-type Props = { name: string; defaultValue?: string | null; label?: string; hint?: string };
+type Props = { name: string; defaultValue?: string | null; label?: string; hint?: string; value?: string; onChange?: (url: string) => void };
 
 /** Single image field: shows a preview, uploads a new file through /api/admin/upload, stores the URL in a hidden input. */
-export function ImageField({ name, defaultValue, label = "Изображение", hint }: Props) {
-  const [url, setUrl] = useState(defaultValue ?? "");
+export function ImageField({ name, defaultValue, label = "Изображение", hint, value, onChange }: Props) {
+  const [inner, setInner] = useState(defaultValue ?? "");
+  const url = value ?? inner;
+  const setUrl = (u: string) => { setInner(u); onChange?.(u); };
   const [busy, setBusy] = useState(false);
   async function upload(file: File) {
     setBusy(true);

@@ -19,7 +19,7 @@ describe("catalog filters", () => {
   it("builds a prisma where clause", () => {
     const where = buildTourWhere({ type: "CAMP", regionSlugs: ["crimea"], tagSlugs: ["sea-camps", "sport-camps"], season: "SUMMER", age: 10, q: "орлёнок море" });
     const and = where.AND as unknown[];
-    expect(and[0]).toEqual({ isPublished: true });
+    expect(and[0]).toEqual({ isPublished: true, archivedAt: null });
     expect(and).toContainEqual({ type: "CAMP" });
     expect(and).toContainEqual({ region: { slug: { in: ["crimea"] } } });
     expect(and).toContainEqual({ tags: { some: { tag: { slug: "sea-camps" } } } });

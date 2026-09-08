@@ -2,8 +2,10 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { AdminPage, Panel, REQUEST_KIND_LABELS, REQUEST_STATUS_LABELS, StatusBadge, Table, Td, Th } from "@/components/admin/ui";
 import { formatDate } from "@/lib/utils";
+import { getAdminTourFacets } from "@/server/queries/admin-tours";
 
 export default async function Dashboard() {
+  const facets = await getAdminTourFacets();
   const [newRequests, tours, published, posts, reviewsPending, payments, latest] = await Promise.all([
     prisma.request.count({ where: { status: "NEW" } }),
     prisma.tour.count(),
@@ -30,6 +32,16 @@ export default async function Dashboard() {
           </Link>
         ))}
       </div>
+      <Panel title="Туры: требуют внимания">
+        <div className="flex flex-wrap gap-2">
+          {([["past", "смены уже прошли", facets.past, "coral"], ["no_shifts", "без смен", facets.noShifts, "sun"], ["no_price", "без цены", facets.noPrice, "sun"], ["no_cover", "без обложки", facets.noCover, "sun"]] as const).map(([flag, label, n, tone]) => (
+            <Link key={flag} href={`/admin/tours/?flag=${flag}`} className={`chip ${n ? (tone === "coral" ? "bg-coral-100 text-coral-700" : "bg-sun-100 text-sun-600") : "bg-mint-100 text-mint-700"}`}>{n} · {label}</Link>
+          ))}
+          <Link href="/admin/tours/?status=draft" className="chip bg-ink-100 text-ink-600">{facets.draft} · черновиков</Link>
+          <Link href="/admin/shifts/" className="chip bg-brand-50 text-brand-700">Календарь смен →</Link>
+        </div>
+        <p className="mt-3 text-xs text-ink-500">Туры с прошедшими сменами удобно перенести на следующий сезон: в списке туров нажмите «след. сезон» — даты и годы сдвинутся автоматически.</p>
+      </Panel>
       <Panel title="Последние заявки">
         <Table className="shadow-none">
           <thead><tr><Th>Дата</Th><Th>Тип</Th><Th>Контакт</Th><Th>Тур</Th><Th>Статус</Th></tr></thead>

@@ -6,12 +6,15 @@ import { CalendarDays, CreditCard, Phone, Printer } from "lucide-react";
 import { Select } from "@/components/ui/form-fields";
 import { BookingButton, CallbackButton } from "@/components/forms/lead-modals";
 import { formatPrice } from "@/lib/utils";
+import { formatShiftRange } from "@/lib/shifts";
 
-type Shift = { id: number; group: string | null; name: string; price: number | null; priceText: string | null };
+type Shift = { id: number; group: string | null; name: string; price: number | null; priceText: string | null; availability: "AVAILABLE" | "FEW" | "SOLD_OUT"; seatsLeft: number | null; startDate: Date | null; endDate: Date | null };
+const AVAIL_LABEL = { AVAILABLE: "", FEW: " · мало мест", SOLD_OUT: " · мест нет" } as const;
 type Props = { tourId: number; tourTitle: string; shifts: Shift[]; priceText: string | null; priceMin: number | null };
 
 export function BookingWidget({ tourId, tourTitle, shifts, priceText, priceMin }: Props) {
-  const [selectedId, setSelectedId] = useState<number | null>(shifts[0]?.id ?? null);
+  const firstOpen = shifts.find((s) => s.availability !== "SOLD_OUT") ?? shifts[0];
+  const [selectedId, setSelectedId] = useState<number | null>(firstOpen?.id ?? null);
   const selected = shifts.find((s) => s.id === selectedId) ?? null;
   const groups = useMemo(() => {
     const map = new Map<string, Shift[]>();
@@ -28,12 +31,18 @@ export function BookingWidget({ tourId, tourTitle, shifts, priceText, priceMin }
         <Select value={selectedId ?? ""} onChange={(e) => setSelectedId(Number(e.target.value))} aria-label="Выберите смену" className="mb-4">
           {groups.map(([group, items]) =>
             group ? (
-              <optgroup key={group} label={group}>{items.map((s) => <option key={s.id} value={s.id}>{s.name}{s.price ? ` — ${formatPrice(s.price)}` : ""}</option>)}</optgroup>
+              <optgroup key={group} label={group}>{items.map((s) => <option key={s.id} value={s.id}>{s.name}{s.price ? ` — ${formatPrice(s.price)}` : ""}{AVAIL_LABEL[s.availability]}</option>)}</optgroup>
             ) : (
-              items.map((s) => <option key={s.id} value={s.id}>{s.name}{s.price ? ` — ${formatPrice(s.price)}` : ""}</option>)
+              items.map((s) => <option key={s.id} value={s.id}>{s.name}{s.price ? ` — ${formatPrice(s.price)}` : ""}{AVAIL_LABEL[s.availability]}</option>)
             ),
           )}
         </Select>
+      ) : null}
+      {selected ? (
+        <div className="mb-3 flex flex-wrap items-center gap-2 text-xs font-bold">
+          {selected.startDate && selected.endDate ? <span className="chip bg-ink-100 text-ink-700">{formatShiftRange(selected.startDate, selected.endDate)}</span> : null}
+          {selected.availability === "AVAILABLE" ? <span className="chip bg-mint-100 text-mint-700">Есть места</span> : selected.availability === "FEW" ? <span className="chip bg-sun-100 text-sun-600">Мало мест{selected.seatsLeft ? `: ${selected.seatsLeft}` : ""}</span> : <span className="chip bg-coral-100 text-coral-700">Мест нет</span>}
+        </div>
       ) : null}
       <div className="mb-4 rounded-2xl bg-brand-50 px-4 py-3">
         <div className="text-xs font-bold uppercase tracking-wide text-ink-500">Стоимость</div>
@@ -43,7 +52,7 @@ export function BookingWidget({ tourId, tourTitle, shifts, priceText, priceMin }
         {!price ? <div className="mt-1 text-xs text-ink-500">Точную стоимость уточнит менеджер</div> : null}
       </div>
       <div className="flex flex-col gap-2">
-        <BookingButton className="btn-primary w-full" tourId={tourId} tourTitle={tourTitle} shiftName={shiftLabel} amount={price}>Отправить заявку</BookingButton>
+        <BookingButton className="btn-primary w-full" tourId={tourId} tourTitle={tourTitle} shiftName={shiftLabel} amount={price}>{selected?.availability === "SOLD_OUT" ? "Записаться в лист ожидания" : "Отправить заявку"}</BookingButton>
         <Link href={`/pay/?amount=${price ?? ""}`} className="btn-outline w-full"><CreditCard className="h-4 w-4" /> Оплатить онлайн</Link>
         <CallbackButton className="btn-ghost w-full"><Phone className="h-4 w-4" /> Заказать звонок</CallbackButton>
         <button type="button" onClick={() => window.print()} className="btn-ghost w-full !text-xs text-ink-500 print:hidden"><Printer className="h-4 w-4" /> Версия для печати</button>

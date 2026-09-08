@@ -27,7 +27,7 @@ export function AdminForm({ action, children, className, submitLabel = "Сохр
 }
 
 import { createContext, useContext } from "react";
-const FormContext = createContext<FormState>(initial);
+export const FormContext = createContext<FormState>(initial);
 export function useFormState() { return useContext(FormContext); }
 
 export function SaveButton({ children }: { children: ReactNode }) {

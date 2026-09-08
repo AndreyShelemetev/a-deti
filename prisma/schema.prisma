@@ -57,6 +57,12 @@ enum PaymentStatus {
   CANCELLED
 }
 
+enum ShiftAvailability {
+  AVAILABLE // есть места
+  FEW       // мало мест
+  SOLD_OUT  // мест нет
+}
+
 enum ReviewSource {
   YANDEX
   GOOGLE
@@ -114,6 +120,8 @@ model Tour {
   isBest          Boolean  @default(false)
   isHit           Boolean  @default(false)
   isPublished     Boolean  @default(true)
+  archivedAt      DateTime?
+  internalNote    String?
   sortOrder       Int      @default(0)
   searchText      String   @default("")
   regionId        Int?
@@ -144,9 +152,12 @@ model TourShift {
   endDate   DateTime?
   price     Int?
   priceText String?
+  availability ShiftAvailability @default(AVAILABLE)
+  seatsLeft Int?
   sortOrder Int     @default(0)
 
   @@index([tourId])
+  @@index([startDate])
 }
 
 model TourImage {

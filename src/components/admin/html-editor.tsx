@@ -3,15 +3,16 @@
 import { useRef, useState } from "react";
 import { Bold, Heading2, Heading3, Image as ImageIcon, Link2, List, Eye, Code, Loader2 } from "lucide-react";
 
-type Props = { name: string; defaultValue?: string; rows?: number; label?: string };
+type Props = { name: string; defaultValue?: string; rows?: number; label?: string; onChange?: (html: string) => void };
 
 /**
  * Lightweight HTML editor: toolbar inserts semantic tags, live preview renders the result with site typography.
  * (Upgrade path: swap for Tiptap without changing the form contract — the field still submits HTML.)
  */
-export function HtmlEditor({ name, defaultValue = "", rows = 18, label }: Props) {
+export function HtmlEditor({ name, defaultValue = "", rows = 18, label, onChange }: Props) {
   const ref = useRef<HTMLTextAreaElement>(null);
-  const [value, setValue] = useState(defaultValue);
+  const [value, setValueState] = useState(defaultValue);
+  const setValue = (v: string) => { setValueState(v); onChange?.(v); };
   const [preview, setPreview] = useState(false);
   const [uploading, setUploading] = useState(false);
 
