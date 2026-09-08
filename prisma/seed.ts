@@ -5,6 +5,7 @@ import bcrypt from "bcryptjs";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
 import type { Season, TourType, SlidePlacement, ReviewSource, PostKind } from "../src/generated/prisma/enums";
+import { parseShiftDates } from "../src/lib/shifts";
 
 type SeedShift = { group: string | null; name: string; price: number | null; priceText: string | null; startDate: string | null; endDate: string | null; sortOrder: number };
 type SeedSection = { key: string; title: string; html: string; sortOrder: number };
@@ -75,7 +76,12 @@ async function main() {
       prisma.tourTag.deleteMany({ where: { tourId: tour.id } }),
       prisma.tourDocument.deleteMany({ where: { tourId: tour.id } }),
     ]);
-    if (t.shifts.length) await prisma.tourShift.createMany({ data: t.shifts.map((s) => ({ tourId: tour.id, group: s.group, name: s.name, price: s.price, priceText: s.priceText, startDate: s.startDate ? new Date(s.startDate) : null, endDate: s.endDate ? new Date(s.endDate) : null, sortOrder: s.sortOrder })) });
+    const tourYear = `${t.seasonText ?? ""} ${t.title}`.match(/\b20\d{2}\b/)?.[0];
+    if (t.shifts.length) await prisma.tourShift.createMany({ data: t.shifts.map((s) => {
+      // recognise dates from free-text names ("01 июня – 21 июня 2026", "2 смена (24.06-14.07) 2026") when the export has none
+      const parsed = s.startDate ? { startDate: s.startDate, endDate: s.endDate } : parseShiftDates(/\b20\d{2}\b/.test(s.name) || !tourYear ? s.name : `${s.name} ${tourYear}`);
+      return { tourId: tour.id, group: s.group, name: s.name, price: s.price, priceText: s.priceText, startDate: parsed.startDate ? new Date(parsed.startDate) : null, endDate: parsed.endDate ? new Date(parsed.endDate) : null, sortOrder: s.sortOrder };
+    }) });
     if (t.images.length) await prisma.tourImage.createMany({ data: t.images.map((url, i) => ({ tourId: tour.id, url, alt: t.title, sortOrder: i })) });
     if (t.sections.length) await prisma.tourSection.createMany({ data: t.sections.map((s) => ({ tourId: tour.id, ...s })) });
     const tagRows = t.tagSlugs.map((s) => tagIds.get(s)).filter((id): id is number => typeof id === "number");
