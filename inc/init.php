@@ -619,7 +619,9 @@ function at_seed_if_empty(PDO $pdo): void
 
 // --- Запуск -------------------------------------------------------------------
 
-if (function_exists('db')) {
+// На отдельном хостинге структуру и исходное наполнение меняет только bin/console.php.
+// Платформенные установки сохраняют прежний порядок автоматического запуска.
+if (function_exists('db') && getenv('AT_STANDALONE') !== '1') {
     $atourPdo = db();
     at_schema_ensure($atourPdo);
     at_seed_if_empty($atourPdo);

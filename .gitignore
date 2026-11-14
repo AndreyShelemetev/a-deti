@@ -27,3 +27,10 @@
 /*.sql.gz
 /*.bundle
 /vendor/
+/.env
+/.release.env
+/.secrets/
+/backups/
+/.deploy/
+*.sql
+*.sql.gz
