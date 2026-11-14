@@ -1,0 +1,16 @@
+{
+  "source_repository": "hitechinvest/sitegen",
+  "source_commit": "eb759082e94f57937621e6c4b249d510c1268973",
+  "source_path": "sites/a-deti",
+  "source_tree": "a62e0ac992fcc35466e32937ae768a7e7428104b",
+  "live_project": 511,
+  "live_url": "https://a-tur.gdesite.ru",
+  "release_marker": "https://a-tur.gdesite.ru/assets/gdesite-release.json",
+  "observed_deployed_at": "2026-11-13T14:18:55+00:00",
+  "prepared_at": "2026-11-14",
+  "public_assets_sha256": {
+    "theme.css": "30b2f006df66b0d8e8aaf7b847867796d464d34b3f3478213dbb7c971d78c02b"
+  },
+  "database_exported": false,
+  "live_worktree_exported": false
+}
