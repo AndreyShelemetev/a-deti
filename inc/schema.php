@@ -310,7 +310,7 @@ function at_schema_install(PDO $pdo): void
  *       $pdo->exec('ALTER TABLE tours ADD COLUMN video VARCHAR(255) NULL AFTER image');
  *   }
  */
-function at_schema_migrate(PDO $pdo, int $from): void
+function at_schema_migrate(PDO $pdo, int $from, bool $content = true): void
 {
     if ($from <= 0) {
         return;   // свежая установка: таблицы созданы сразу в полном виде
@@ -320,17 +320,17 @@ function at_schema_migrate(PDO $pdo, int $from): void
         // Расширяем только ёмкость поля, сохраняя значения и допустимый NULL.
         $pdo->exec('ALTER TABLE atour_settings MODIFY COLUMN v MEDIUMTEXT NULL');
     }
-    if ($from < 8) {
+    if ($content && $from < 8) {
         require_once __DIR__ . '/camp.php';
         at_camp_import_layout($pdo, ATOUR_ROOT . '/data/camp-layouts/art-kvest.json');
     }
-    if ($from < 7) {
+    if ($content && $from < 7) {
         $setting = $pdo->prepare('REPLACE INTO atour_settings (k, v) VALUES (?, ?)');
         $setting->execute(['contacts.reestrUrl', 'https://ev.economy.gov.ru/lk_exp/registry/to/f080bc6f-3715-418d-b48b-909090f7b331']);
         $setting->execute(['home.ticketText', 'Организуем централизованную доставку детей в «Орлёнок», «Артек», лагеря Анапы и Крыма: билеты, сопровождение, питание в дороге.']);
         $setting->execute(['site.footerLogo', '/assets/design/logo.svg']);
     }
-    if ($from < 6) {
+    if ($content && $from < 6) {
         at_refresh_yandex_profile($pdo);
     }
     // Сначала колонки по версиям, потом содержимое: сид опирается на полную схему.
@@ -357,6 +357,8 @@ function at_schema_migrate(PDO $pdo, int $from): void
             $pdo->exec('ALTER TABLE tour_shifts ADD INDEX idx_shifts_start (start_date)');
         }
     }
+    // Восстановленная база получает только DDL: её туры, настройки и отзывы не заменяем.
+    if (!$content) return;
     require_once __DIR__ . '/seed.php';
     $seed = json_decode((string) @file_get_contents(ATOUR_ROOT . '/data/seed.json'), true);
     if (!is_array($seed)) {

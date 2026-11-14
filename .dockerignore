@@ -1,0 +1,16 @@
+.git
+.env
+.env.*
+!.env.example
+.release.env
+.secrets
+.deploy
+backups
+var
+*.sql
+*.sql.gz
+*.bundle
+db.php
+config.php
+.DS_Store
+.github
