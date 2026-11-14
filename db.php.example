@@ -1,0 +1,21 @@
+<?php
+declare(strict_types=1);
+
+// Пример для собственного хостинга. Реальные значения задаются окружением PHP.
+function db(): PDO
+{
+    static $connection = null;
+    if ($connection instanceof PDO) return $connection;
+    $dsn = getenv('AT_DB_DSN');
+    $user = getenv('AT_DB_USER');
+    if (!$dsn || !$user) throw new RuntimeException('Задайте AT_DB_DSN и AT_DB_USER в окружении PHP.');
+    $connection = new PDO($dsn, $user, getenv('AT_DB_PASSWORD') ?: '', [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES => false,
+    ]);
+    return $connection;
+}
+
+if (session_status() === PHP_SESSION_NONE) session_start();
+require_once __DIR__ . '/inc/init.php';

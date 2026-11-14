@@ -1,49 +1,29 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# Платформенные файлы: их кладёт платформа при установке сайта (installServiceFiles)
+/db.php
+/config.php
+/error-handler.php
+/seo.php
+/leads.php
+/userauth.php
+/sg-forms.js
+/adm_panel001.php
+/admin.php
+/api.php
+/content-page.php
+/news.php
+/events.php
+/sg_api.php
+/suggest.js
+/robots.txt
+/.sg-*
+/var/
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
-
-# testing
-/coverage
-
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
-.DS_Store
-*.pem
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# env files (can opt-in for committing if needed)
-.env*
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-
-# prisma generated client
-/src/generated/
-
-# keep the example env file
-!.env.example
-updater/logs/
-logs/
+/.env.*
+!/.env.example
+/.DS_Store
+/.idea/
+/.vscode/
+/*.sql
+/*.sql.gz
+/*.bundle
+/vendor/
